@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebChromeClient;
@@ -20,14 +21,15 @@ import android.webkit.WebViewClient;
 import org.cnmc.painClinic.R;
 import org.cnmc.painClinic.helper.propertiesReader;
 import org.cnmc.painClinic.service.painReportNotificationService;
-
+import org.cnmc.painClinic.helper.jsHandler;
 
 public class MainActivity extends ActionBarActivity {
     private static int alarmIntervalInMins=1;
     private WebView webView;
     private propertiesReader propertiesReader;
     private String deliveryurl;
-
+    private jsHandler _jsHandler;
+    private boolean firstPageFinishedLoading=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +37,6 @@ public class MainActivity extends ActionBarActivity {
 
         propertiesReader=new propertiesReader(getApplicationContext());
         deliveryurl=propertiesReader.getProperties("cnmcpr.properties").getProperty("deliveryurl");
-
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
 
         webView=(WebView)findViewById(R.id.webView);
@@ -48,6 +49,11 @@ public class MainActivity extends ActionBarActivity {
 
         settings.setDatabaseEnabled(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
+
+        //add javascript interface
+        _jsHandler = new jsHandler(this, webView);
+        webView.addJavascriptInterface(_jsHandler, "jsHandler");
+        webView.addJavascriptInterface(this,"mainActivity");
 
         //These settings are not available before Jelly Bean
         if(currentapiVersion>= Build.VERSION_CODES.JELLY_BEAN){
@@ -71,6 +77,13 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.dismiss();
+                //this method gets called every time any page finishes loading
+                //firstPageFinishedLoading will make sure to call the getPIN JavaScript
+                //method only once
+                if(!firstPageFinishedLoading) {
+                    webView.loadUrl("javascript:getPIN()");
+                    firstPageFinishedLoading=true;
+                }
                 super.onPageFinished(view, url);
             }
         });

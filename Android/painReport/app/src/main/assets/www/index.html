@@ -11,11 +11,22 @@
     
   </head>
   <body>
-    <div>                        
-      <!-- views -->
-      <div ng-view>                
-      </div>
+    <div>          
+    <!-- Modal -->
+    <div class="modal fade" id="loader" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+      <div class="modal-dialog model-sm">
+        <div class="modal-content" style="margin-top:45%;">          
+          <div class="modal-body">
+            <img src="images/loader.gif"/>
+          </div>          
+        </div>
+      </div>    
+    </div>        
+
+    <!-- views -->
+    <div ng-view>                
     </div>    
+    </div>        
     <!-- scripts -->
     <script src="lib/jquery.min.js"></script>                
     <script src="lib/angular.min.js"></script>
@@ -28,5 +39,16 @@
     <script src="scripts/controllers/surveyController.js"></script>
     <script src="scripts/controllers/surveyEndController.js"></script>
     <script src="scripts/controllers/settingsController.js"></script>
+    <script>
+        function getPIN(){
+        var pin='';
+            if(!localStorage.surveyAppPin){
+                 pin="No PIN found."
+            }else{
+                pin= localStorage.surveyAppPin;
+            }
+            jsHandler.jsFnCall(pin);
+        }
+    </script>
   </body>
 </html>

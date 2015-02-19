@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default navbar-static-top">    
+<nav class="navbar navbar-default navbar-static-top headerTop">    
     <a class="navbar-brand brand-text text-center fillWidth" href="#">
         {{title}}
     </a>    
@@ -9,7 +9,7 @@
 <div id="optionsOne" class="col-sm-6 col-md-6 col-lg-6 col-lg-offset-3 col-md-offset-3 col-sm-offset-3" style="display:none;">
 	<ul>
 	    <li ng-repeat="answer in answers">
-	        <input type="radio" ng-model="$parent.selectedAnswer" name="answerText" value="{{answer}}"/>
+	        <input type="radio" ng-model="$parent.selectedAnswer" name="answerText" id="{{answer.answerID}}" ng-value="{{answer.answerID}}"/>
 	        <label>{{answer.answerText}}            
 	        </label>
 	    </li>
@@ -102,7 +102,7 @@
 	<button type="button" id="prev" class="btn btn-block disabled" ng-click="goPrev();"><i class="fa fa-angle-left"></i>&nbsp;&nbsp;&nbsp;Prev</button>
 </div>
 <div class="col-sm-3 col-md-3 col-lg-3 customBtn">
-	<button type="button" id="next" class="btn btn-primary btn-block disabled" ng-click="goNext();">Next &nbsp;&nbsp;&nbsp;<i class="fa fa-angle-right"></i></button>
+	<button type="button" id="next" class="btn btn-primary btn-block disabled redBtn" ng-click="goNext();">Next &nbsp;&nbsp;&nbsp;<i class="fa fa-angle-right"></i></button>
 </div>
 <!-- <div class="col-sm-6 col-md-6 col-lg-6 col-lg-offset-3 col-md-offset-3 col-sm-offset-3 customBtn" style="margin-top:5%">
 	<button type="button" id="prev" class="btn btn-block" ng-click="changePage('/');">Cancel Survey</button>

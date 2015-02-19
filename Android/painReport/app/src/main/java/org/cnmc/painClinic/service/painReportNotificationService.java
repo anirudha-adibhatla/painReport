@@ -7,11 +7,14 @@ import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
@@ -19,7 +22,9 @@ import android.view.View;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cnmc.painClinic.R;
 import org.cnmc.painClinic.helper.propertiesReader;
+import org.cnmc.painClinic.painReport.MainActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,7 +37,7 @@ public class painReportNotificationService extends Service {
     private PowerManager.WakeLock mWakeLock;
     private org.cnmc.painClinic.helper.propertiesReader propertiesReader;
     private String notifQueryUrl;
-
+    private String pin="";
     public painReportNotificationService() {
     }
 
@@ -46,8 +51,11 @@ public class painReportNotificationService extends Service {
         //get notifQueryUrl
         propertiesReader=new propertiesReader(getApplicationContext());
         notifQueryUrl=propertiesReader.getProperties("cnmcpr.properties").getProperty("notifQueryUrl");
-        //get PIN number from local storage
-        String pin="2000";//to be implemented using a custom class
+        //get PIN number from shared preferences
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(sharedPrefs.contains("PIN")) {
+            pin = sharedPrefs.getString("PIN", null);
+        }
         //add pin number to the notifQueryUrl
         notifQueryUrl=notifQueryUrl+"?pin="+pin;
 
@@ -65,7 +73,7 @@ public class painReportNotificationService extends Service {
         }
 
         // asyncTask handles the actual polling so as not to crash the main UI thread
-        if(notifQueryUrl!=null)
+        if(notifQueryUrl!=null|| pin!="No PIN found")
         {
             new PollTask().execute(notifQueryUrl);
         }
@@ -97,6 +105,12 @@ public class painReportNotificationService extends Service {
                     e.printStackTrace();
                 }
             }
+            //for testing only remove before deployment
+            if(response==""){
+                if(pin.equals("2000")){
+                    response="{'survey':'true'}";
+                }
+            }
             return response;
         }
 
@@ -113,17 +127,23 @@ public class painReportNotificationService extends Service {
                     //Notification.Builder is not available for API version <11 i.e HoneyComb
                     //Else condition only applies to API level 10 i.e. Gingerbread
                     if(currentapiVersion> Build.VERSION_CODES.GINGERBREAD){
+                        int SERVER_DATA_RECEIVED = 1;
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                         NotificationManager notificationManager =
                                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
+                                SERVER_DATA_RECEIVED, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                         Notification.Builder builder = new Notification.Builder(getApplicationContext())
-                                .setSmallIcon(android.R.drawable.stat_sys_download)
+                                .setSmallIcon(R.drawable.ic_action_alarms)
+                                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
                                 .setAutoCancel(true)
+                                .setContentIntent(pendingIntent)
                                 .setContentTitle("Pain Report")
                                 .setContentText("Next Survey is available");
 
                         Notification notification=builder.getNotification();
-                        int SERVER_DATA_RECEIVED = 1;
+                        notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
                         notificationManager.notify(SERVER_DATA_RECEIVED, notification);
                     }
                     else{
